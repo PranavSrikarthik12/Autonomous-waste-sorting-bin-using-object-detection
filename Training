@@ -1,1 +1,323 @@
-{"metadata":{"kernelspec":{"language":"python","display_name":"Python 3","name":"python3"},"language_info":{"name":"python","version":"3.10.14","mimetype":"text/x-python","codemirror_mode":{"name":"ipython","version":3},"pygments_lexer":"ipython3","nbconvert_exporter":"python","file_extension":".py"},"kaggle":{"accelerator":"gpu","dataSources":[{"sourceId":2328010,"sourceType":"datasetVersion","datasetId":1253419}],"dockerImageVersionId":30761,"isInternetEnabled":true,"language":"python","sourceType":"notebook","isGpuEnabled":true}},"nbformat_minor":4,"nbformat":4,"cells":[{"cell_type":"code","source":"# Import necessary libraries\nimport torch\nimport torch.nn as nn\nimport torch.optim as optim\nfrom torchvision import datasets, transforms, models\nfrom torch.utils.data import DataLoader\nimport os\n\n# Check if GPU is available and set device\ndevice = torch.device(\"cuda\" if torch.cuda.is_available() else \"cpu\")\nprint(\"Using device:\", device)\n\n# Define transformations for the dataset\ntransform = transforms.Compose([\n    transforms.Resize((224, 224)),\n    transforms.ToTensor(),\n])\n\n# Load dataset (replace with your dataset path)\ndata_dir = '/kaggle/input/non-and-biodegradable-waste-dataset/TRAIN.1'\ntrain_dataset = datasets.ImageFolder(data_dir, transform=transform)\ntrain_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)\n\n# Define the model (ResNet18)\nmodel = models.resnet18(pretrained=True)\nnum_features = model.fc.in_features\nmodel.fc = nn.Linear(num_features, 2)  # Adjust according to your number of classes\nmodel = model.to(device)\n\n# Define loss and optimizer\ncriterion = nn.CrossEntropyLoss()\noptimizer = optim.Adam(model.parameters(), lr=0.001)\n\n# Train the model\nepochs = 10\nfor epoch in range(epochs):\n    model.train()\n    running_loss = 0.0\n    for inputs, labels in train_loader:\n        inputs, labels = inputs.to(device), labels.to(device)\n\n        optimizer.zero_grad()\n        outputs = model(inputs)\n        loss = criterion(outputs, labels)\n        loss.backward()\n        optimizer.step()\n\n        running_loss += loss.item()\n\n    print(f\"Epoch [{epoch+1}/{epochs}], Loss: {running_loss/len(train_loader)}\")\n\n# Save the trained model\nmodel_file = 'resnet18_model.pth'\ntorch.save(model.state_dict(), model_file)\n\nprint(\"Model training completed and saved as:\", model_file)\n","metadata":{"execution":{"iopub.status.busy":"2024-09-14T17:05:58.591995Z","iopub.execute_input":"2024-09-14T17:05:58.592929Z","iopub.status.idle":"2024-09-14T17:57:07.185721Z","shell.execute_reply.started":"2024-09-14T17:05:58.592887Z","shell.execute_reply":"2024-09-14T17:57:07.184591Z"},"trusted":true},"execution_count":14,"outputs":[{"name":"stdout","text":"Using device: cuda\n","output_type":"stream"},{"name":"stderr","text":"/opt/conda/lib/python3.10/site-packages/torchvision/models/_utils.py:208: UserWarning: The parameter 'pretrained' is deprecated since 0.13 and may be removed in the future, please use 'weights' instead.\n  warnings.warn(\n/opt/conda/lib/python3.10/site-packages/torchvision/models/_utils.py:223: UserWarning: Arguments other than a weight enum or `None` for 'weights' are deprecated since 0.13 and may be removed in the future. The current behavior is equivalent to passing `weights=ResNet18_Weights.IMAGENET1K_V1`. You can also use `weights=ResNet18_Weights.DEFAULT` to get the most up-to-date weights.\n  warnings.warn(msg)\nDownloading: \"https://download.pytorch.org/models/resnet18-f37072fd.pth\" to /root/.cache/torch/hub/checkpoints/resnet18-f37072fd.pth\n100%|██████████| 44.7M/44.7M [00:00<00:00, 102MB/s] \n","output_type":"stream"},{"name":"stdout","text":"Epoch [1/10], Loss: 0.15790049482516852\nEpoch [2/10], Loss: 0.1166901420302156\nEpoch [3/10], Loss: 0.09951511294532764\nEpoch [4/10], Loss: 0.08582912801923524\nEpoch [5/10], Loss: 0.07483409701705325\nEpoch [6/10], Loss: 0.05823004183473063\nEpoch [7/10], Loss: 0.04666375172576142\nEpoch [8/10], Loss: 0.039648218477079014\nEpoch [9/10], Loss: 0.030564218691580543\nEpoch [10/10], Loss: 0.026467383259898693\nModel training completed and saved as: resnet18_model.pth\n","output_type":"stream"}]},{"cell_type":"code","source":"import os\nprint(os.listdir('/kaggle/input/non-and-biodegradable-waste-dataset/TRAIN.1'))\n","metadata":{"execution":{"iopub.status.busy":"2024-09-14T17:04:24.797228Z","iopub.execute_input":"2024-09-14T17:04:24.797791Z","iopub.status.idle":"2024-09-14T17:04:24.805739Z","shell.execute_reply.started":"2024-09-14T17:04:24.797748Z","shell.execute_reply":"2024-09-14T17:04:24.804732Z"},"trusted":true},"execution_count":13,"outputs":[{"name":"stdout","text":"['N', 'B']\n","output_type":"stream"}]},{"cell_type":"code","source":"import os\n\n# Check if the file exists\nif os.path.isfile('resnet18_model.pth'):\n    print(\"File exists.\")\nelse:\n    print(\"File does not exist.\")\n","metadata":{"execution":{"iopub.status.busy":"2024-09-14T18:03:31.912793Z","iopub.execute_input":"2024-09-14T18:03:31.913198Z","iopub.status.idle":"2024-09-14T18:03:31.920020Z","shell.execute_reply.started":"2024-09-14T18:03:31.913159Z","shell.execute_reply":"2024-09-14T18:03:31.918872Z"},"trusted":true},"execution_count":15,"outputs":[{"name":"stdout","text":"File exists.\n","output_type":"stream"}]},{"cell_type":"code","source":"import shutil\n\n# Move file to the working directory\nshutil.move('resnet18_model.pth', '/kaggle/working/resnet18_model.pth')\n","metadata":{"execution":{"iopub.status.busy":"2024-09-14T18:03:50.292599Z","iopub.execute_input":"2024-09-14T18:03:50.293029Z","iopub.status.idle":"2024-09-14T18:03:50.301184Z","shell.execute_reply.started":"2024-09-14T18:03:50.292987Z","shell.execute_reply":"2024-09-14T18:03:50.300113Z"},"trusted":true},"execution_count":16,"outputs":[{"execution_count":16,"output_type":"execute_result","data":{"text/plain":"'/kaggle/working/resnet18_model.pth'"},"metadata":{}}]},{"cell_type":"code","source":"from IPython.display import FileLink\n\n# Generate a download link\nFileLink('/kaggle/working/resnet18_model.pth')\n","metadata":{"execution":{"iopub.status.busy":"2024-09-14T18:04:08.917447Z","iopub.execute_input":"2024-09-14T18:04:08.917889Z","iopub.status.idle":"2024-09-14T18:04:08.925752Z","shell.execute_reply.started":"2024-09-14T18:04:08.917847Z","shell.execute_reply":"2024-09-14T18:04:08.924456Z"},"trusted":true},"execution_count":17,"outputs":[{"execution_count":17,"output_type":"execute_result","data":{"text/plain":"/kaggle/working/resnet18_model.pth","text/html":"<a href='/kaggle/working/resnet18_model.pth' target='_blank'>/kaggle/working/resnet18_model.pth</a><br>"},"metadata":{}}]}]}
+{
+ "cells": [
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "id": "7359474d",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-09-20T14:09:23.611650Z",
+     "iopub.status.busy": "2024-09-20T14:09:23.611269Z",
+     "iopub.status.idle": "2024-09-20T14:52:00.334656Z",
+     "shell.execute_reply": "2024-09-20T14:52:00.333491Z"
+    },
+    "papermill": {
+     "duration": 2556.733857,
+     "end_time": "2024-09-20T14:52:00.340340",
+     "exception": false,
+     "start_time": "2024-09-20T14:09:23.606483",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Using device: cuda\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "/opt/conda/lib/python3.10/site-packages/torchvision/models/_utils.py:208: UserWarning: The parameter 'pretrained' is deprecated since 0.13 and may be removed in the future, please use 'weights' instead.\n",
+      "  warnings.warn(\n",
+      "/opt/conda/lib/python3.10/site-packages/torchvision/models/_utils.py:223: UserWarning: Arguments other than a weight enum or `None` for 'weights' are deprecated since 0.13 and may be removed in the future. The current behavior is equivalent to passing `weights=ResNet18_Weights.IMAGENET1K_V1`. You can also use `weights=ResNet18_Weights.DEFAULT` to get the most up-to-date weights.\n",
+      "  warnings.warn(msg)\n",
+      "Downloading: \"https://download.pytorch.org/models/resnet18-f37072fd.pth\" to /root/.cache/torch/hub/checkpoints/resnet18-f37072fd.pth\n",
+      "100%|██████████| 44.7M/44.7M [00:00<00:00, 201MB/s]\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Epoch [1/10], Loss: 0.16163098169276885\n",
+      "Epoch [2/10], Loss: 0.12080420373237379\n",
+      "Epoch [3/10], Loss: 0.10191952355292531\n",
+      "Epoch [4/10], Loss: 0.0870249010805857\n",
+      "Epoch [5/10], Loss: 0.07565640099076265\n",
+      "Epoch [6/10], Loss: 0.062184177813470985\n",
+      "Epoch [7/10], Loss: 0.05019558532163128\n",
+      "Epoch [8/10], Loss: 0.04114436756609591\n",
+      "Epoch [9/10], Loss: 0.03285765770010354\n",
+      "Epoch [10/10], Loss: 0.027328501503566187\n",
+      "Model training completed and saved as: resnet18_model.pth\n"
+     ]
+    }
+   ],
+   "source": [
+    "# Import necessary libraries\n",
+    "import torch\n",
+    "import torch.nn as nn\n",
+    "import torch.optim as optim\n",
+    "from torchvision import datasets, transforms, models\n",
+    "from torch.utils.data import DataLoader\n",
+    "import os\n",
+    "\n",
+    "# Check if GPU is available and set device\n",
+    "device = torch.device(\"cuda\" if torch.cuda.is_available() else \"cpu\")\n",
+    "print(\"Using device:\", device)\n",
+    "\n",
+    "# Define transformations for the dataset\n",
+    "transform = transforms.Compose([\n",
+    "    transforms.Resize((224, 224)),\n",
+    "    transforms.ToTensor(),\n",
+    "])\n",
+    "\n",
+    "# Load dataset (replace with your dataset path)\n",
+    "data_dir = '/kaggle/input/non-and-biodegradable-waste-dataset/TRAIN.1'\n",
+    "train_dataset = datasets.ImageFolder(data_dir, transform=transform)\n",
+    "train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)\n",
+    "\n",
+    "# Define the model (ResNet18)\n",
+    "model = models.resnet18(pretrained=True)\n",
+    "num_features = model.fc.in_features\n",
+    "model.fc = nn.Linear(num_features, 2)  # Adjust according to your number of classes\n",
+    "model = model.to(device)\n",
+    "\n",
+    "# Define loss and optimizer\n",
+    "criterion = nn.CrossEntropyLoss()\n",
+    "optimizer = optim.Adam(model.parameters(), lr=0.001)\n",
+    "\n",
+    "# Train the model\n",
+    "epochs = 10\n",
+    "for epoch in range(epochs):\n",
+    "    model.train()\n",
+    "    running_loss = 0.0\n",
+    "    for inputs, labels in train_loader:\n",
+    "        inputs, labels = inputs.to(device), labels.to(device)\n",
+    "\n",
+    "        optimizer.zero_grad()\n",
+    "        outputs = model(inputs)\n",
+    "        loss = criterion(outputs, labels)\n",
+    "        loss.backward()\n",
+    "        optimizer.step()\n",
+    "\n",
+    "        running_loss += loss.item()\n",
+    "\n",
+    "    print(f\"Epoch [{epoch+1}/{epochs}], Loss: {running_loss/len(train_loader)}\")\n",
+    "\n",
+    "# Save the trained model\n",
+    "model_file = 'resnet18_model.pth'\n",
+    "torch.save(model.state_dict(), model_file)\n",
+    "\n",
+    "print(\"Model training completed and saved as:\", model_file)\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "id": "54cfcfb3",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-09-20T14:52:00.349591Z",
+     "iopub.status.busy": "2024-09-20T14:52:00.349074Z",
+     "iopub.status.idle": "2024-09-20T14:52:00.354764Z",
+     "shell.execute_reply": "2024-09-20T14:52:00.353768Z"
+    },
+    "papermill": {
+     "duration": 0.012597,
+     "end_time": "2024-09-20T14:52:00.356845",
+     "exception": false,
+     "start_time": "2024-09-20T14:52:00.344248",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "['N', 'B']\n"
+     ]
+    }
+   ],
+   "source": [
+    "import os\n",
+    "print(os.listdir('/kaggle/input/non-and-biodegradable-waste-dataset/TRAIN.1'))\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 3,
+   "id": "e006ce65",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-09-20T14:52:00.366844Z",
+     "iopub.status.busy": "2024-09-20T14:52:00.366546Z",
+     "iopub.status.idle": "2024-09-20T14:52:00.371468Z",
+     "shell.execute_reply": "2024-09-20T14:52:00.370637Z"
+    },
+    "papermill": {
+     "duration": 0.012136,
+     "end_time": "2024-09-20T14:52:00.373503",
+     "exception": false,
+     "start_time": "2024-09-20T14:52:00.361367",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "File exists.\n"
+     ]
+    }
+   ],
+   "source": [
+    "import os\n",
+    "\n",
+    "# Check if the file exists\n",
+    "if os.path.isfile('resnet18_model.pth'):\n",
+    "    print(\"File exists.\")\n",
+    "else:\n",
+    "    print(\"File does not exist.\")\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 4,
+   "id": "d1931a04",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-09-20T14:52:00.383540Z",
+     "iopub.status.busy": "2024-09-20T14:52:00.383252Z",
+     "iopub.status.idle": "2024-09-20T14:52:00.390283Z",
+     "shell.execute_reply": "2024-09-20T14:52:00.389399Z"
+    },
+    "papermill": {
+     "duration": 0.01428,
+     "end_time": "2024-09-20T14:52:00.392246",
+     "exception": false,
+     "start_time": "2024-09-20T14:52:00.377966",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "'/kaggle/working/resnet18_model.pth'"
+      ]
+     },
+     "execution_count": 4,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "import shutil\n",
+    "\n",
+    "# Move file to the working directory\n",
+    "shutil.move('resnet18_model.pth', '/kaggle/working/resnet18_model.pth')\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 5,
+   "id": "760da46f",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-09-20T14:52:00.401383Z",
+     "iopub.status.busy": "2024-09-20T14:52:00.400789Z",
+     "iopub.status.idle": "2024-09-20T14:52:00.406894Z",
+     "shell.execute_reply": "2024-09-20T14:52:00.405954Z"
+    },
+    "papermill": {
+     "duration": 0.012795,
+     "end_time": "2024-09-20T14:52:00.408924",
+     "exception": false,
+     "start_time": "2024-09-20T14:52:00.396129",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<a href='/kaggle/working/resnet18_model.pth' target='_blank'>/kaggle/working/resnet18_model.pth</a><br>"
+      ],
+      "text/plain": [
+       "/kaggle/working/resnet18_model.pth"
+      ]
+     },
+     "execution_count": 5,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "from IPython.display import FileLink\n",
+    "\n",
+    "# Generate a download link\n",
+    "FileLink('/kaggle/working/resnet18_model.pth')\n"
+   ]
+  }
+ ],
+ "metadata": {
+  "kaggle": {
+   "accelerator": "gpu",
+   "dataSources": [
+    {
+     "datasetId": 1253419,
+     "sourceId": 2328010,
+     "sourceType": "datasetVersion"
+    }
+   ],
+   "dockerImageVersionId": 30761,
+   "isGpuEnabled": true,
+   "isInternetEnabled": true,
+   "language": "python",
+   "sourceType": "notebook"
+  },
+  "kernelspec": {
+   "display_name": "Python 3",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.10.14"
+  },
+  "papermill": {
+   "default_parameters": {},
+   "duration": 2560.874704,
+   "end_time": "2024-09-20T14:52:01.734777",
+   "environment_variables": {},
+   "exception": null,
+   "input_path": "__notebook__.ipynb",
+   "output_path": "__notebook__.ipynb",
+   "parameters": {},
+   "start_time": "2024-09-20T14:09:20.860073",
+   "version": "2.6.0"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}
